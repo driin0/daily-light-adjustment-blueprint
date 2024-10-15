@@ -1,0 +1,389 @@
+blueprint:
+  name: Daily automatic light color adjustment
+  description: Adjust lights automatically based on day of the week, with configurable color and brightness.
+  domain: automation
+  input:
+    entity_lights:
+      name: Lights to adjust
+      description: Select the lights to adjust
+      selector:
+        entity:
+          domain: light
+          multiple: true
+
+    boolean_entity:
+      name: Optional boolean entity
+      description: Select the boolean entity that will activate the automation (optional)
+      selector:
+        entity:
+          domain: input_boolean
+      default: ""
+
+    fixed_start_time:
+      name: Fixed Start Time
+      description: Specify the start time for the automation
+      selector:
+        time: {}
+      default: "12:00:00"
+
+    # Monday configuration
+    enable_monday:
+      name: Enable Monday
+      description: Enable or disable adjustment for Monday
+      default: true
+      selector:
+        boolean: {}
+
+    monday_rgb_color:
+      name: Monday RGB Color
+      description: Select the RGB color for Monday
+      default:
+        - 0
+        - 70
+        - 120
+      selector:
+        color_rgb: {}
+
+    monday_brightness_pct:
+      name: Monday Brightness (percent)
+      description: Select the brightness for Monday in percent
+      default: 100
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+
+    # Tuesday configuration
+    enable_tuesday:
+      name: Enable Tuesday
+      description: Enable or disable adjustment for Tuesday
+      default: true
+      selector:
+        boolean: {}
+
+    tuesday_rgb_color:
+      name: Tuesday RGB Color
+      description: Select the RGB color for Tuesday
+      default:
+        - 0
+        - 70
+        - 120
+      selector:
+        color_rgb: {}
+
+    tuesday_brightness_pct:
+      name: Tuesday Brightness (percent)
+      description: Select the brightness for Tuesday in percent
+      default: 100
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+
+    # Wednesday configuration
+    enable_wednesday:
+      name: Enable Wednesday
+      description: Enable or disable adjustment for Wednesday
+      default: true
+      selector:
+        boolean: {}
+
+    wednesday_rgb_color:
+      name: Wednesday RGB Color
+      description: Select the RGB color for Wednesday
+      default:
+        - 0
+        - 70
+        - 120
+      selector:
+        color_rgb: {}
+
+    wednesday_brightness_pct:
+      name: Wednesday Brightness (percent)
+      description: Select the brightness for Wednesday in percent
+      default: 100
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+
+    # Thursday configuration
+    enable_thursday:
+      name: Enable Thursday
+      description: Enable or disable adjustment for Thursday
+      default: true
+      selector:
+        boolean: {}
+
+    thursday_rgb_color:
+      name: Thursday RGB Color
+      description: Select the RGB color for Thursday
+      default:
+        - 0
+        - 70
+        - 120
+      selector:
+        color_rgb: {}
+
+    thursday_brightness_pct:
+      name: Thursday Brightness (percent)
+      description: Select the brightness for Thursday in percent
+      default: 100
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+
+    # Friday configuration
+    enable_friday:
+      name: Enable Friday
+      description: Enable or disable adjustment for Friday
+      default: true
+      selector:
+        boolean: {}
+
+    friday_rgb_color:
+      name: Friday RGB Color
+      description: Select the RGB color for Friday
+      default:
+        - 0
+        - 70
+        - 120
+      selector:
+        color_rgb: {}
+
+    friday_brightness_pct:
+      name: Friday Brightness (percent)
+      description: Select the brightness for Friday in percent
+      default: 100
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+
+    # Saturday configuration
+    enable_saturday:
+      name: Enable Saturday
+      description: Enable or disable adjustment for Saturday
+      default: true
+      selector:
+        boolean: {}
+
+    saturday_rgb_color:
+      name: Saturday RGB Color
+      description: Select the RGB color for Saturday
+      default:
+        - 0
+        - 70
+        - 120
+      selector:
+        color_rgb: {}
+
+    saturday_brightness_pct:
+      name: Saturday Brightness (percent)
+      description: Select the brightness for Saturday in percent
+      default: 100
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+
+    # Sunday configuration
+    enable_sunday:
+      name: Enable Sunday
+      description: Enable or disable adjustment for Sunday
+      default: true
+      selector:
+        boolean: {}
+
+    sunday_rgb_color:
+      name: Sunday RGB Color
+      description: Select the RGB color for Sunday
+      default:
+        - 0
+        - 70
+        - 120
+      selector:
+        color_rgb: {}
+
+    sunday_brightness_pct:
+      name: Sunday Brightness (percent)
+      description: Select the brightness for Sunday in percent
+      default: 100
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+
+variables:
+  boolean_entity: !input boolean_entity
+  enable_monday: !input enable_monday
+  enable_tuesday: !input enable_tuesday
+  enable_wednesday: !input enable_wednesday
+  enable_thursday: !input enable_thursday
+  enable_friday: !input enable_friday
+  enable_saturday: !input enable_saturday
+  enable_sunday: !input enable_sunday
+
+trigger_variables:
+  boolean_entity: !input boolean_entity
+
+trigger:
+  - platform: time_pattern
+    seconds: "0"
+  - platform: template
+    value_template: "{{ is_state(boolean_entity, 'on') }}"
+
+condition:
+  - condition: template
+    value_template: "{{ boolean_entity == '' or is_state(boolean_entity, 'on') }}"
+
+action:
+  - choose:
+      # Monday
+      - conditions:
+          - condition: template
+            value_template: "{{ enable_monday }}"
+          - condition: or
+            conditions:
+              - condition: time
+                weekday: mon
+                after: !input fixed_start_time
+              - condition: time
+                weekday: tue
+                before: !input fixed_start_time
+        sequence:
+          - service: light.turn_on
+            target:
+              entity_id: !input entity_lights
+            data:
+              rgb_color: !input monday_rgb_color
+              brightness_pct: !input monday_brightness_pct
+
+      # Tuesday
+      - conditions:
+          - condition: template
+            value_template: "{{ enable_tuesday }}"
+          - condition: or
+            conditions:
+              - condition: time
+                weekday: tue
+                after: !input fixed_start_time
+              - condition: time
+                weekday: wed
+                before: !input fixed_start_time
+        sequence:
+          - service: light.turn_on
+            target:
+              entity_id: !input entity_lights
+            data:
+              rgb_color: !input tuesday_rgb_color
+              brightness_pct: !input tuesday_brightness_pct
+
+      # Wednesday
+      - conditions:
+          - condition: template
+            value_template: "{{ enable_wednesday }}"
+          - condition: or
+            conditions:
+              - condition: time
+                weekday: wed
+                after: !input fixed_start_time
+              - condition: time
+                weekday: thu
+                before: !input fixed_start_time
+        sequence:
+          - service: light.turn_on
+            target:
+              entity_id: !input entity_lights
+            data:
+              rgb_color: !input wednesday_rgb_color
+              brightness_pct: !input wednesday_brightness_pct
+
+      # Thursday
+      - conditions:
+          - condition: template
+            value_template: "{{ enable_thursday }}"
+          - condition: or
+            conditions:
+              - condition: time
+                weekday: thu
+                after: !input fixed_start_time
+              - condition: time
+                weekday: fri
+                before: !input fixed_start_time
+        sequence:
+          - service: light.turn_on
+            target:
+              entity_id: !input entity_lights
+            data:
+              rgb_color: !input thursday_rgb_color
+              brightness_pct: !input thursday_brightness_pct
+
+      # Friday
+      - conditions:
+          - condition: template
+            value_template: "{{ enable_friday }}"
+          - condition: or
+            conditions:
+              - condition: time
+                weekday: fri
+                after: !input fixed_start_time
+              - condition: time
+                weekday: sat
+                before: !input fixed_start_time
+        sequence:
+          - service: light.turn_on
+            target:
+              entity_id: !input entity_lights
+            data:
+              rgb_color: !input friday_rgb_color
+              brightness_pct: !input friday_brightness_pct
+
+      # Saturday
+      - conditions:
+          - condition: template
+            value_template: "{{ enable_saturday }}"
+          - condition: or
+            conditions:
+              - condition: time
+                weekday: sat
+                after: !input fixed_start_time
+              - condition: time
+                weekday: sun
+                before: !input fixed_start_time
+        sequence:
+          - service: light.turn_on
+            target:
+              entity_id: !input entity_lights
+            data:
+              rgb_color: !input saturday_rgb_color
+              brightness_pct: !input saturday_brightness_pct
+
+      # Sunday
+      - conditions:
+          - condition: template
+            value_template: "{{ enable_sunday }}"
+          - condition: or
+            conditions:
+              - condition: time
+                weekday: sun
+                after: !input fixed_start_time
+              - condition: time
+                weekday: mon
+                before: !input fixed_start_time
+        sequence:
+          - service: light.turn_on
+            target:
+              entity_id: !input entity_lights
+            data:
+              rgb_color: !input sunday_rgb_color
+              brightness_pct: !input sunday_brightness_pct
+mode: single
