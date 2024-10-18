@@ -2,6 +2,8 @@
 
 This blueprint allows you to automatically adjust the color and brightness of selected lights based on the day of the week. The configuration includes the option to specify a fixed time that determines when the settings change for the next day, covering the period until the same time the following day.
 
+[![Open your Home Assistant instance and show the blueprint import dialog with a specific blueprint pre-filled.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fdriin0%2Fdaily-light-adjustment-blueprint%2Fblob%2Fmain%2Fdaily_automatic_light_color_adjustment.yaml)
+
 ## Features
 
 - Adjust lights based on the day of the week.
@@ -31,6 +33,8 @@ This blueprint allows you to automatically adjust the color and brightness of se
 # Regolazione Automatica del Colore delle Luci Giornaliero
 
 Questo blueprint permette di regolare automaticamente il colore e la luminosità delle luci selezionate in base al giorno della settimana. La configurazione include la possibilità di specificare un orario fisso che determina quando le impostazioni cambiano, coprendo il periodo fino alla stessa ora del giorno successivo.
+
+[![Open your Home Assistant instance and show the blueprint import dialog with a specific blueprint pre-filled.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fdriin0%2Fdaily-light-adjustment-blueprint%2Fblob%2Fmain%2Fdaily_automatic_light_color_adjustment.yaml)
 
 ## Caratteristiche
 
