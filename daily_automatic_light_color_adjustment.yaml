@@ -20,8 +20,8 @@ blueprint:
       default: ""
 
     fixed_start_time:
-      name: Fixed Start Time
-      description: Specify the start time for the automation
+      name: Daily Threshold Time
+      description: "The time threshold that determines the start of a new day. Changes take effect from this time until the same time the next day."
       selector:
         time: {}
       default: "12:00:00"
