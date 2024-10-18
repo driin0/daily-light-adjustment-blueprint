@@ -1,6 +1,6 @@
 blueprint:
   name: Daily automatic light color adjustment
-  description: Adjust lights automatically based on day of the week, with configurable color and brightness.
+  description: Adjust lights automatically based on day of the week, with configurable color and brightness. The automation runs every minute.
   domain: automation
   input:
     entity_lights:
@@ -19,12 +19,73 @@ blueprint:
           domain: input_boolean
       default: ""
 
-    fixed_start_time:
-      name: Daily Threshold Time
-      description: "The time threshold that determines the start of a new day. Changes take effect from this time until the same time the next day."
+    # Threshold Time
+    threshold_time:
+      name: Threshold Time
+      description: The time threshold that determines the start of a new day. The changes take effect from this time until the same time the next day.
       selector:
         time: {}
       default: "12:00:00"
+
+    # Start Time Configuration
+    start_time_type:
+      name: Start Time Type
+      description: Choose whether to use a fixed time or sunrise/sunset for the start of the automation period.
+      selector:
+        select:
+          options:
+            - Fixed Time
+            - Sunrise
+            - Sunset
+      default: "Fixed Time"
+
+    start_time_fixed:
+      name: Start Time for Automation
+      description: Specify the start time for the automation period (if using fixed time).
+      selector:
+        time: {}
+      default: "00:00:00"
+
+    # End Time Configuration
+    end_time_type:
+      name: End Time Type
+      description: Choose whether to use a fixed time or sunrise/sunset for the end of the automation period.
+      selector:
+        select:
+          options:
+            - Fixed Time
+            - Sunrise
+            - Sunset
+      default: "Fixed Time"
+
+    end_time_fixed:
+      name: End Time for Automation
+      description: Specify the end time for the automation period (if using fixed time).
+      selector:
+        time: {}
+      default: "23:59:59"
+
+    # Sunrise configuration
+    sunrise_offset:
+      name: Sunrise Offset
+      description: Offset time for sunrise (in minutes).
+      selector:
+        number:
+          min: -720
+          max: 720
+          unit_of_measurement: "minutes"
+      default: 0
+
+    # Sunset configuration
+    sunset_offset:
+      name: Sunset Offset
+      description: Offset time for sunset (in minutes).
+      selector:
+        number:
+          min: -720
+          max: 720
+          unit_of_measurement: "minutes"
+      default: 0
 
     # Monday configuration
     enable_monday:
@@ -224,6 +285,13 @@ blueprint:
 
 variables:
   boolean_entity: !input boolean_entity
+  start_time_type: !input start_time_type
+  end_time_type: !input end_time_type
+  start_time_fixed: !input start_time_fixed
+  end_time_fixed: !input end_time_fixed
+  sunrise_offset: !input sunrise_offset
+  sunset_offset: !input sunset_offset
+  threshold_time: !input threshold_time
   enable_monday: !input enable_monday
   enable_tuesday: !input enable_tuesday
   enable_wednesday: !input enable_wednesday
@@ -231,6 +299,24 @@ variables:
   enable_friday: !input enable_friday
   enable_saturday: !input enable_saturday
   enable_sunday: !input enable_sunday
+
+  actual_start_time: >
+    {% if start_time_type == "Fixed Time" %}
+      {{ start_time_fixed }}
+    {% elif start_time_type == "Sunrise" %}
+      {{ (as_timestamp(state_attr('sun.sun', 'next_rising')) + sunrise_offset * 60) | timestamp_custom('%H:%M:%S') }}
+    {% elif start_time_type == "Sunset" %}
+      {{ (as_timestamp(state_attr('sun.sun', 'next_setting')) + sunset_offset * 60) | timestamp_custom('%H:%M:%S') }}
+    {% endif %}
+
+  actual_end_time: >
+    {% if end_time_type == "Fixed Time" %}
+      {{ end_time_fixed }}
+    {% elif end_time_type == "Sunrise" %}
+      {{ (as_timestamp(state_attr('sun.sun', 'next_rising')) + sunrise_offset * 60) | timestamp_custom('%H:%M:%S') }}
+    {% elif end_time_type == "Sunset" %}
+      {{ (as_timestamp(state_attr('sun.sun', 'next_setting')) + sunset_offset * 60) | timestamp_custom('%H:%M:%S') }}
+    {% endif %}
 
 trigger_variables:
   boolean_entity: !input boolean_entity
@@ -244,6 +330,14 @@ trigger:
 condition:
   - condition: template
     value_template: "{{ boolean_entity == '' or is_state(boolean_entity, 'on') }}"
+  - condition: template
+    value_template: >
+      {% set current_time = now().strftime('%H:%M:%S') %}
+      {% if actual_start_time < actual_end_time %}
+        {{ actual_start_time <= current_time <= actual_end_time }}
+      {% else %}
+        {{ current_time >= actual_start_time or current_time <= actual_end_time }}
+      {% endif %}
 
 action:
   - choose:
@@ -255,10 +349,10 @@ action:
             conditions:
               - condition: time
                 weekday: mon
-                after: !input fixed_start_time
+                after: !input threshold_time
               - condition: time
                 weekday: tue
-                before: !input fixed_start_time
+                before: !input threshold_time
         sequence:
           - service: light.turn_on
             target:
@@ -275,10 +369,10 @@ action:
             conditions:
               - condition: time
                 weekday: tue
-                after: !input fixed_start_time
+                after: !input threshold_time
               - condition: time
                 weekday: wed
-                before: !input fixed_start_time
+                before: !input threshold_time
         sequence:
           - service: light.turn_on
             target:
@@ -295,10 +389,10 @@ action:
             conditions:
               - condition: time
                 weekday: wed
-                after: !input fixed_start_time
+                after: !input threshold_time
               - condition: time
                 weekday: thu
-                before: !input fixed_start_time
+                before: !input threshold_time
         sequence:
           - service: light.turn_on
             target:
@@ -315,10 +409,10 @@ action:
             conditions:
               - condition: time
                 weekday: thu
-                after: !input fixed_start_time
+                after: !input threshold_time
               - condition: time
                 weekday: fri
-                before: !input fixed_start_time
+                before: !input threshold_time
         sequence:
           - service: light.turn_on
             target:
@@ -335,10 +429,10 @@ action:
             conditions:
               - condition: time
                 weekday: fri
-                after: !input fixed_start_time
+                after: !input threshold_time
               - condition: time
                 weekday: sat
-                before: !input fixed_start_time
+                before: !input threshold_time
         sequence:
           - service: light.turn_on
             target:
@@ -355,10 +449,10 @@ action:
             conditions:
               - condition: time
                 weekday: sat
-                after: !input fixed_start_time
+                after: !input threshold_time
               - condition: time
                 weekday: sun
-                before: !input fixed_start_time
+                before: !input threshold_time
         sequence:
           - service: light.turn_on
             target:
@@ -375,10 +469,10 @@ action:
             conditions:
               - condition: time
                 weekday: sun
-                after: !input fixed_start_time
+                after: !input threshold_time
               - condition: time
                 weekday: mon
-                before: !input fixed_start_time
+                before: !input threshold_time
         sequence:
           - service: light.turn_on
             target:
